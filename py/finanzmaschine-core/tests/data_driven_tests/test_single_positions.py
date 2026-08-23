@@ -86,7 +86,7 @@ def df_sold(request) -> pl.DataFrame:
     ],
     indirect=["position", "df_golden_values", "df_sold"],
 )
-def test_sell_position(
+def test_position_closing(
     position: P,
     df_golden_values: pl.DataFrame,
     df_sold: pl.DataFrame,
@@ -133,8 +133,8 @@ def test_sell_position(
         operation_named_tuple = parse_operation(operation_type_str, operation_variant_str)
         assert operation_named_tuple.variant in expected_sell_id
 
-        # Test datetime_sold
-        expected_record_datetime_sold = df_golden_values.row(index, named=True)["datetime_sold"]
+        # Test datetime_closed
+        expected_record_datetime_sold = df_golden_values.row(index, named=True)["datetime_closed"]
         assert df_sold.row(sell_index, named=True)["datetime"] == expected_record_datetime_sold
 
         # Test lot_id
@@ -180,7 +180,7 @@ def test_sell_position(
         record_fee_remaining = record_fee_to_close - record.fee
         assert record_fee_remaining == expected_record_fee_remaining
 
-        # Test proceeds
+        # Test proceeds_sold
         expected_record_proceeds_sold = Decimal(df_golden_values.row(index, named=True)["proceeds_sold"])
         record_proceeds_sold = round_to_quantum(
             record.quantity * record.price - record.fee,
@@ -196,7 +196,7 @@ def test_sell_position(
         )
         assert record_cost_basis_sold == expected_record_cost_basis_sold
 
-        # Test pnl
+        # Test pnl_sold
         expected_record_pnl_sold = Decimal(df_golden_values.row(index, named=True)["pnl_sold"])
         record_pnl_sold = record_proceeds_sold - record_cost_basis_sold
         assert record_pnl_sold == expected_record_pnl_sold

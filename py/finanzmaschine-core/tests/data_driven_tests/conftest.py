@@ -13,7 +13,7 @@ from finanzmaschine_core.portfolio.positions import CryptoEtpPosition
 from finanzmaschine_core.portfolio.records import CryptoEtpBrokerTradeRecord
 
 
-def create_df_expected_selling(file_path: Path) -> pl.DataFrame:
+def create_df_expected_closing(file_path: Path) -> pl.DataFrame:
     df = pl.read_csv(
         source=file_path,
         try_parse_dates=True,
@@ -36,22 +36,22 @@ def create_df_expected_selling(file_path: Path) -> pl.DataFrame:
 
 @pytest.fixture(scope="session")
 def df_expected_ton_etp_fifo_fifo(data_dir: Path) -> pl.DataFrame:
-    return create_df_expected_selling(data_dir / "etps/expected_ton_etp_fifo_fifo.csv")
+    return create_df_expected_closing(data_dir / "etps/expected_ton_etp_fifo_fifo.csv")
 
 
 @pytest.fixture(scope="session")
 def df_expected_ton_etp_fifo_lifo(data_dir: Path) -> pl.DataFrame:
-    return create_df_expected_selling(data_dir / "etps/expected_ton_etp_fifo_lifo.csv")
+    return create_df_expected_closing(data_dir / "etps/expected_ton_etp_fifo_lifo.csv")
 
 
 @pytest.fixture(scope="session")
 def df_expected_ton_etp_lifo_fifo(data_dir: Path) -> pl.DataFrame:
-    return create_df_expected_selling(data_dir / "etps/expected_ton_etp_lifo_fifo.csv")
+    return create_df_expected_closing(data_dir / "etps/expected_ton_etp_lifo_fifo.csv")
 
 
 @pytest.fixture(scope="session")
 def df_expected_ton_etp_lifo_lifo(data_dir: Path) -> pl.DataFrame:
-    return create_df_expected_selling(data_dir / "etps/expected_ton_etp_lifo_lifo.csv")
+    return create_df_expected_closing(data_dir / "etps/expected_ton_etp_lifo_lifo.csv")
 
 
 @pytest.fixture(scope="session")

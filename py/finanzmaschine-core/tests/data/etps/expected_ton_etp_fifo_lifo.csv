@@ -1,4 +1,4 @@
-closing_order,sell_id,datetime_sold,lot_id,datetime_open,quantity_open_before,quantity_to_close,quantity_closed,quantity_remaining,quantity_open_after,fee_to_close,fee_closed,fee_remaining,proceeds_sold,cost_basis_sold,pnl_sold
+closing_order,sell_id,datetime_closed,lot_id,datetime_open,quantity_open_before,quantity_to_close,quantity_closed,quantity_remaining,quantity_open_after,fee_to_close,fee_closed,fee_remaining,proceeds_sold,cost_basis_sold,pnl_sold
 FIFO,SELL_1,2026-01-05T14:16:44+01:00,LOT_01,2025-09-24T16:54:07+02:00,26,373,26,347,0,16.03,1.12,14.91,160.86,246.02,-85.16
 FIFO,SELL_1,2026-01-05T14:16:44+01:00,LOT_02,2025-09-26T20:26:27+02:00,10,347,10,337,0,14.91,0.43,14.48,61.87,94.22,-32.35
 FIFO,SELL_1,2026-01-05T14:16:44+01:00,LOT_03,2025-09-29T20:32:59+02:00,27,337,27,310,0,14.48,1.16,13.32,167.05,243.76,-76.71
