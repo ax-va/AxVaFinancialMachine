@@ -1,18 +1,19 @@
 [tool.poetry]
-name = "finanzmaschine-core"
+name = "finanzmaschine-data"
 version = "0.1.0"
-description = "Finanzmaschine Core"
+description = "Finanzmaschine Data"
 authors = ["ax-va"]
 license = "../../LICENSE.md"
 readme = "../../README.md"
-packages = [{ include = "finanzmaschine_core", from = "src" }]
+packages = [{ include = "finanzmaschine_data", from = "src" }]
 keywords = ["finance", "crypto", "trading", "investments", "performance-analysis", "securities", "tax-reporting", "investment-management", "portfolio-accounting"]
 
 [tool.poetry.urls]
 homepage = "https://github.com/ax-va/Finanzmaschine"
-repository = "https://github.com/ax-va/Finanzmaschine/tree/main/py/finanzmaschine-core"
+repository = "https://github.com/ax-va/Finanzmaschine/tree/main/py/finanzmaschine-data"
 
 [tool.poetry.dependencies]
+httpx = "^0.28.1"
 python = "^3.12"
 polars = "^1.38.1"
 pyyaml = "^6.0.3"
