@@ -1,0 +1,22 @@
+from datetime import datetime
+
+from sqlalchemy import BigInteger
+from sqlmodel import Field, SQLModel
+
+
+class BlockHeight(SQLModel, table=True):
+    __tablename__ = 'block_heights'
+
+    block_height: int = Field(
+        primary_key=True,
+        sa_type=BigInteger,
+    )
+    timestamp: datetime
+    timestamp_nanosec: int = Field(
+        sa_type=BigInteger,
+    )
+
+    epoch_id: str = Field(
+        foreign_key='epoch.epoch_id',
+        index=True,
+    )
