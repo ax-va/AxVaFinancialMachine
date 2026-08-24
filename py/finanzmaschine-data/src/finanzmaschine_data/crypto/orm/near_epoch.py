@@ -2,8 +2,8 @@ from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
 
 
-class Epoch(SQLModel, table=True):
-    __tablename__ = 'epochs'
+class NearEpoch(SQLModel, table=True):
+    __tablename__ = 'near_epochs'
 
     epoch_id: str = Field(primary_key=True)
 

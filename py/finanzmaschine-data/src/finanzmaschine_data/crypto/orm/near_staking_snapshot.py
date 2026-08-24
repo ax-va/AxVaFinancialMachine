@@ -3,15 +3,15 @@ from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
 
 
-class StakingBalanceSnapshot(SQLModel, table=True):
-    __tablename__ = "staking_balance_snapshots"
+class NearStakingSnapshot(SQLModel, table=True):
+    __tablename__ = "near_staking_snapshots"
 
     account_id: str = Field(primary_key=True)
     pool_id: str = Field(primary_key=True)
 
     block_height: int = Field(
         primary_key=True,
-        foreign_key='block_heights.block_height',
+        foreign_key='near_block_heights.block_height',
         sa_type=BigInteger,
     )
 
