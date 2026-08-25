@@ -114,7 +114,7 @@ def _extract_quantity_yocto_str(
         StakingActionType.UNSTAKE,
         StakingActionType.WITHDRAW,
     ):
-        # TODO: DEPOSIT, STAKE, UNSTAKE, WITHDRAW
+        # TODO: Add handling DEPOSIT, STAKE, UNSTAKE, WITHDRAW
         raise NotImplementedError(f"DEPOSIT, STAKE, UNSTAKE, and WITHDRAW not supported yet: {action_type}")
 
     raise RuntimeError(f"Unexpected staking action type: {action_type}")
