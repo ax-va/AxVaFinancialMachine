@@ -1,7 +1,7 @@
 import httpx
 
 
-class NearTransactionsClient:
+class TxsClient:
     BASE_URL = "https://tx.main.fastnear.com"
 
     def __init__(self, client: httpx.Client) -> None:
@@ -43,6 +43,6 @@ class NearTransactionsClient:
             )
             response.raise_for_status()
             data = response.json()
-            raw_txs.extend(data)
+            raw_txs.extend(data["transactions"])
 
         return raw_txs

@@ -1,29 +1,40 @@
 from finanzmaschine_staking.orm.near.staking_action import StakingAction, StakingActionType
 
 
-def create_staking_action(
-    raw_tx: dict,
-) -> StakingAction | None:
+def is_staking_action(raw_tx: dict) -> bool:
     transaction = raw_tx["transaction"]
 
-    actions = transaction.get("actions", [])
-    if not actions:
-        return None
-
-    if len(actions) > 1:
-        # TODO: Support multi-action transactions
-        raise NotImplementedError(f"Multi-action transactions not supported yet: {actions}")
-
-    function_call = actions[0].get("FunctionCall")
+    function_call = _extract_function_call(transaction)
     if function_call is None:
-        return None
+        return False
 
-    method_name = function_call["method_name"]
+    method_name = function_call.get("method_name")
+    if method_name is None:
+        return False
+
+    try:
+        StakingActionType(method_name)
+    except (ValueError, TypeError):
+        return False
+
+    return True
+
+
+def create_staking_action(raw_tx: dict) -> StakingAction:
+    transaction = raw_tx["transaction"]
+
+    function_call = _extract_function_call(transaction)
+    if function_call is None:
+        raise RuntimeError(f"'FuctionCall' not found: {transaction}")
+
+    method_name = function_call.get("method_name")
+    if method_name is None:
+        raise RuntimeError(f"'method_name' not found: {function_call}")
 
     try:
         action_type = StakingActionType(method_name)
-    except ValueError:
-        return None
+    except (ValueError, TypeError):
+        raise RuntimeError(f"'{method_name}' is not a valid staking action type")
 
     receipt_id = _extract_receipt_id(raw_tx)
 
@@ -44,6 +55,18 @@ def create_staking_action(
             action_type=action_type,
         ),
     )
+
+
+def _extract_function_call(
+    transaction: dict,
+) -> dict | None:
+    actions = transaction.get("actions", [])
+    if len(actions) != 1:
+        return None
+
+    function_call = actions[0].get("FunctionCall")
+
+    return function_call
 
 
 def _extract_receipt_id(raw_tx: dict) -> str:
@@ -94,6 +117,6 @@ def _extract_quantity_yocto_str(
         StakingActionType.WITHDRAW,
     ):
         # TODO: STAKE, UNSTAKE, WITHDRAW
-        raise NotImplementedError(f"TAKE, UNSTAKE, WITHDRAW not supported yet: {action_type}")
+        raise NotImplementedError(f"STAKE, UNSTAKE, WITHDRAW not supported yet: {action_type}")
 
     return None
