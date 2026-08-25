@@ -2,13 +2,13 @@ from finanzmaschine_staking.orm.near.staking_action import StakingAction, Stakin
 
 
 def is_staking_action(raw_tx: dict) -> bool:
-    transaction = raw_tx["transaction"]
+    transaction: dict = raw_tx["transaction"]
 
-    function_call = _extract_function_call(transaction)
+    function_call: dict | None = _extract_function_call(transaction)
     if function_call is None:
         return False
 
-    method_name = function_call.get("method_name")
+    method_name: str | None = function_call.get("method_name")
     if method_name is None:
         return False
 
@@ -21,24 +21,24 @@ def is_staking_action(raw_tx: dict) -> bool:
 
 
 def create_staking_action(raw_tx: dict) -> StakingAction:
-    transaction = raw_tx["transaction"]
+    transaction: dict = raw_tx["transaction"]
 
-    function_call = _extract_function_call(transaction)
+    function_call: dict | None = _extract_function_call(transaction)
     if function_call is None:
         raise RuntimeError(f"'FuctionCall' not found: {transaction}")
 
-    method_name = function_call.get("method_name")
+    method_name: str | None = function_call.get("method_name")
     if method_name is None:
         raise RuntimeError(f"'method_name' not found: {function_call}")
 
     try:
         action_type = StakingActionType(method_name)
     except (ValueError, TypeError):
-        raise RuntimeError(f"'{method_name}' is not a valid staking action type")
+        raise RuntimeError(f"{method_name!r} is not a valid staking action type")
 
-    receipt_id = _extract_receipt_id(raw_tx)
+    receipt_id: str = _extract_receipt_id(raw_tx)
 
-    receipt = _extract_receipt(
+    receipt: dict = _extract_receipt(
         raw_tx=raw_tx,
         receipt_id=receipt_id,
     )
