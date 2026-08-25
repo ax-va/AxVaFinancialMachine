@@ -1,16 +1,16 @@
 [tool.poetry]
-name = "finanzmaschine-data"
+name = "finanzmaschine-staking"
 version = "0.1.0"
-description = "Finanzmaschine Data"
+description = "Finanzmaschine Staking"
 authors = ["ax-va"]
 license = "../../LICENSE.md"
 readme = "../../README.md"
-packages = [{ include = "finanzmaschine_data", from = "src" }]
-keywords = ["finance", "crypto", "trading", "investments", "performance-analysis", "securities", "tax-reporting", "investment-management", "portfolio-accounting"]
+packages = [{ include = "finanzmaschine_staking", from = "src" }]
+keywords = ["finance", "crypto", "staking", "staking-rewards", "tax-reporting", "investment-management", "portfolio-accounting"]
 
 [tool.poetry.urls]
 homepage = "https://github.com/ax-va/Finanzmaschine"
-repository = "https://github.com/ax-va/Finanzmaschine/tree/main/py/finanzmaschine-data"
+repository = "https://github.com/ax-va/Finanzmaschine/tree/main/py/finanzmaschine-staking"
 
 [tool.poetry.dependencies]
 httpx = "^0.28.1"
