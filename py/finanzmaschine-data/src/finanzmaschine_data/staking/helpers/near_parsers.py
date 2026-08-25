@@ -54,7 +54,7 @@ def _extract_receipt_id(raw_tx: dict) -> str:
     )
 
     if len(receipt_ids) != 1:
-        raise RuntimeError(f"Expected exactly one root receipt, got {receipt_ids}")
+        raise RuntimeError(f"Expected exactly one receipt, got {receipt_ids}")
 
     return receipt_ids[0]
 
