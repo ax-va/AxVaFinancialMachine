@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
 
 
-class NearStakingSnapshot(SQLModel, table=True):
+class StakingBalanceSnapshot(SQLModel, table=True):
     __tablename__ = "near_staking_snapshots"
 
     account_id: str = Field(primary_key=True)

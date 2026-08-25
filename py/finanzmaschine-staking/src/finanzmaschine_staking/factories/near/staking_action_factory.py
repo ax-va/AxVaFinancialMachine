@@ -1,9 +1,9 @@
-from finanzmaschine_data.staking.orm.near_staking_action import NearStakingAction, NearStakingActionType
+from finanzmaschine_staking.orm.near.staking_action import StakingAction, StakingActionType
 
 
-def create_near_staking_action(
+def create_staking_action(
     raw_tx: dict,
-) -> NearStakingAction | None:
+) -> StakingAction | None:
     transaction = raw_tx["transaction"]
 
     actions = transaction.get("actions", [])
@@ -21,7 +21,7 @@ def create_near_staking_action(
     method_name = function_call["method_name"]
 
     try:
-        action_type = NearStakingActionType(method_name)
+        action_type = StakingActionType(method_name)
     except ValueError:
         return None
 
@@ -32,7 +32,7 @@ def create_near_staking_action(
         receipt_id=receipt_id,
     )
 
-    return NearStakingAction(
+    return StakingAction(
         receipt_id=receipt_id,
         tx_hash=transaction["hash"],
         account_id=transaction["signer_id"],
@@ -72,26 +72,26 @@ def _extract_receipt(
 
 def _extract_quantity_yocto_str(
     function_call: dict,
-    action_type: NearStakingActionType,
+    action_type: StakingActionType,
 ) -> str | None:
 
     if action_type in (
-        NearStakingActionType.DEPOSIT,
-        NearStakingActionType.DEPOSIT_AND_STAKE,
+        StakingActionType.DEPOSIT,
+        StakingActionType.DEPOSIT_AND_STAKE,
     ):
         return function_call["deposit"]
 
     if action_type in (
-        NearStakingActionType.STAKE_ALL,
-        NearStakingActionType.UNSTAKE_ALL,
-        NearStakingActionType.WITHDRAW_ALL,
+        StakingActionType.STAKE_ALL,
+        StakingActionType.UNSTAKE_ALL,
+        StakingActionType.WITHDRAW_ALL,
     ):
         return None
 
     if action_type in (
-        NearStakingActionType.STAKE,
-        NearStakingActionType.UNSTAKE,
-        NearStakingActionType.WITHDRAW,
+        StakingActionType.STAKE,
+        StakingActionType.UNSTAKE,
+        StakingActionType.WITHDRAW,
     ):
         # TODO: STAKE, UNSTAKE, WITHDRAW
         raise NotImplementedError(f"TAKE, UNSTAKE, WITHDRAW not supported yet: {action_type}")

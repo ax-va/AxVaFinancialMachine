@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
 
 
-class NearStakingActionType(StrEnum):
+class StakingActionType(StrEnum):
     DEPOSIT_AND_STAKE = "deposit_and_stake"
     DEPOSIT = "deposit"
     STAKE = "stake"
@@ -17,7 +17,7 @@ class NearStakingActionType(StrEnum):
     WITHDRAW_ALL = "withdraw_all"
 
 
-class NearStakingAction(SQLModel, table=True):
+class StakingAction(SQLModel, table=True):
     __tablename__ = "near_staking_actions"
 
     receipt_id: str = Field(primary_key=True)
@@ -31,7 +31,7 @@ class NearStakingAction(SQLModel, table=True):
         sa_type=BigInteger,
     )
 
-    action_type: NearStakingActionType
+    action_type: StakingActionType
     quantity_yocto_str: str | None = None
 
     @field_validator("quantity_yocto_str")

@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
 
 
-class NearBlockHeight(SQLModel, table=True):
+class BlockHeight(SQLModel, table=True):
     __tablename__ = 'near_block_heights'
 
     block_height: int = Field(
