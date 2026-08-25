@@ -98,10 +98,7 @@ def _extract_quantity_yocto_str(
     action_type: StakingActionType,
 ) -> str | None:
 
-    if action_type in (
-        StakingActionType.DEPOSIT,
-        StakingActionType.DEPOSIT_AND_STAKE,
-    ):
+    if action_type == StakingActionType.DEPOSIT_AND_STAKE:
         return function_call["deposit"]
 
     if action_type in (
@@ -112,11 +109,12 @@ def _extract_quantity_yocto_str(
         return None
 
     if action_type in (
+        StakingActionType.DEPOSIT,
         StakingActionType.STAKE,
         StakingActionType.UNSTAKE,
         StakingActionType.WITHDRAW,
     ):
-        # TODO: STAKE, UNSTAKE, WITHDRAW
-        raise NotImplementedError(f"STAKE, UNSTAKE, WITHDRAW not supported yet: {action_type}")
+        # TODO: DEPOSIT, STAKE, UNSTAKE, WITHDRAW
+        raise NotImplementedError(f"DEPOSIT, STAKE, UNSTAKE, and WITHDRAW not supported yet: {action_type}")
 
-    return None
+    raise RuntimeError(f"Unexpected staking action type: {action_type}")
