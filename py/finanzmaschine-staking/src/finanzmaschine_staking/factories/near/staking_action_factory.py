@@ -1,25 +1,6 @@
 from finanzmaschine_staking.orm.near.staking_action import StakingAction, StakingActionType
 
 
-def is_staking_action(raw_tx: dict) -> bool:
-    transaction: dict = raw_tx["transaction"]
-
-    function_call: dict | None = _extract_function_call(transaction)
-    if function_call is None:
-        return False
-
-    method_name: str | None = function_call.get("method_name")
-    if method_name is None:
-        return False
-
-    try:
-        StakingActionType(method_name)
-    except (ValueError, TypeError):
-        return False
-
-    return True
-
-
 def create_staking_action(raw_tx: dict) -> StakingAction:
     transaction: dict = raw_tx["transaction"]
 
@@ -55,6 +36,25 @@ def create_staking_action(raw_tx: dict) -> StakingAction:
             action_type=action_type,
         ),
     )
+
+
+def is_staking_action(raw_tx: dict) -> bool:
+    transaction: dict = raw_tx["transaction"]
+
+    function_call: dict | None = _extract_function_call(transaction)
+    if function_call is None:
+        return False
+
+    method_name: str | None = function_call.get("method_name")
+    if method_name is None:
+        return False
+
+    try:
+        StakingActionType(method_name)
+    except (ValueError, TypeError):
+        return False
+
+    return True
 
 
 def _extract_function_call(
