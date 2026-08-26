@@ -11,12 +11,9 @@ class BlockHeight(SQLModel, table=True):
         primary_key=True,
         sa_type=BigInteger,
     )
+
     timestamp: datetime
+
     timestamp_nanosec: int = Field(
         sa_type=BigInteger,
-    )
-
-    epoch_id: str = Field(
-        foreign_key='near_epochs.epoch_id',
-        index=True,
     )
