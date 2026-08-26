@@ -4,7 +4,7 @@ from sqlmodel import Field, SQLModel
 
 
 class StakingBalanceSnapshot(SQLModel, table=True):
-    __tablename__ = "near_staking_snapshots"
+    __tablename__ = "near_staking_balance_snapshots"
 
     account_id: str = Field(primary_key=True)
     pool_id: str = Field(primary_key=True)
