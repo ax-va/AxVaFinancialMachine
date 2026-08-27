@@ -1,5 +1,9 @@
+import logging
+
 from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
 from finanzmaschine_staking.sync_clients.near.staking_client import StakingClient
+
+logger = logging.getLogger(__name__)
 
 
 def are_balances_equal(
@@ -34,6 +38,11 @@ def find_next_balance_change(
         ValueError: If `right_block_height` is less than
         or equal to `left_snapshot.block_height`.
     """
+    logger.debug(
+        f"Starting search for next balance change between block heights "
+        f"{left_snapshot.block_height} and {right_block_height}"
+    )
+
     if right_block_height <= left_snapshot.block_height:
         raise ValueError(
             "`right_block_height` must be greater than `left_snapshot.block_height`"
@@ -49,9 +58,19 @@ def find_next_balance_change(
     )
 
     if are_balances_equal(left_snapshot, right_snapshot):
+        logger.debug(
+            f"No balance change between block heights "
+            f"{left_snapshot.block_height} and {right_snapshot.block_height}"
+        )
+
         return None
 
     while right_snapshot.block_height - left_snapshot.block_height > 1:
+        logger.debug(
+            f"Searching balance change between block heights "
+            f"{left_snapshot.block_height} and {right_snapshot.block_height}"
+        )
+
         middle_block_height = (left_snapshot.block_height + right_snapshot.block_height) // 2
 
         middle_snapshot = staking_client.get_snapshot(
@@ -62,8 +81,9 @@ def find_next_balance_change(
 
         if are_balances_equal(left_snapshot, middle_snapshot):
             left_snapshot = middle_snapshot
-
         else:
             right_snapshot = middle_snapshot
+
+    logger.debug(f"Found next balance change at block height {right_snapshot.block_height}")
 
     return right_snapshot
