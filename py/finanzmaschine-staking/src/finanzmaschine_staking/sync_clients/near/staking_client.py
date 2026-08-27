@@ -1,6 +1,7 @@
 import json
+from functools import lru_cache
 
-from finanzmaschine_staking.orm.near.staking_balance_snapshot import StakingBalanceSnapshot
+from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
 from finanzmaschine_staking.sync_clients.near.rpc_client import RpcClient
 
 
@@ -8,14 +9,16 @@ class StakingClient:
     def __init__(self, rpc_client: RpcClient) -> None:
         self._rpc_client = rpc_client
 
+    @lru_cache(maxsize=4096)
     def get_snapshot(
         self,
         account_id: str,
         pool_id: str,
         block_height: int,
-    ) -> StakingBalanceSnapshot:
+    ) -> BalanceSnapshot:
         """
         Gets a staking balance snapshot at a given block height.
+        Uses LRU cache.
 
         Args:
             account_id: NEAR account ID whose staking balance is queried.
@@ -40,7 +43,7 @@ class StakingClient:
             method_name="get_account_unstaked_balance",
         )
 
-        return StakingBalanceSnapshot(
+        return BalanceSnapshot(
             account_id=account_id,
             pool_id=pool_id,
             block_height=block_height,

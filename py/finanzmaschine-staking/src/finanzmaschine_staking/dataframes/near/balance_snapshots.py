@@ -1,6 +1,6 @@
 import polars as pl
 
-from finanzmaschine_staking.orm.near.staking_balance_snapshot import StakingBalanceSnapshot
+from finanzmaschine_staking.orm.near.staking_balance_snapshot import BalanceSnapshot
 
 ACCOUNT_ID = "account_id"
 POOL_ID = "pool_id"
@@ -16,12 +16,12 @@ SCHEMA = {
     UNSTAKED_BALANCE_YOCTO_STR: pl.String,
 }
 
-df_staking_balance_snapshots = pl.DataFrame(schema=SCHEMA)
+df_balance_snapshots = pl.DataFrame(schema=SCHEMA)
 
 
 def add_snapshot(
     df: pl.DataFrame,
-    snapshot: StakingBalanceSnapshot,
+    snapshot: BalanceSnapshot,
 ) -> pl.DataFrame:
 
     df_duplicate = df.filter(
@@ -64,7 +64,7 @@ def get_snapshot(
     account_id: str,
     pool_id: str,
     block_height: int,
-) -> StakingBalanceSnapshot | None:
+) -> BalanceSnapshot | None:
     df_snapshot = df.filter(
         (pl.col(ACCOUNT_ID) == account_id)
         & (pl.col(POOL_ID) == pool_id)
@@ -84,7 +84,7 @@ def get_snapshot(
 
     row = df_snapshot.row(0, named=True)
 
-    return StakingBalanceSnapshot(
+    return BalanceSnapshot(
         account_id=row[ACCOUNT_ID],
         pool_id=row[POOL_ID],
         block_height=row[BLOCK_HEIGHT],
