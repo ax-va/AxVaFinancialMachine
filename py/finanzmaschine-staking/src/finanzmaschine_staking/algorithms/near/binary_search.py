@@ -1,6 +1,7 @@
 import logging
 
 from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
+from finanzmaschine_staking.sync_clients.near.rpc_client_exeptions import BlockHeightNotFoundError
 from finanzmaschine_staking.sync_clients.near.staking_client import StakingClient
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ def find_next_balance_change(
 ) -> BalanceSnapshot | None:
     """
     Finds the next snapshot with changed balance (staked or unstaked balances)
-    between `left_snapshot.block_height` and `right_block_height`.
+    between left snapshot and right block height searching from left to right.
     Returns `None`, if no balance snapshot is detected in the given interval.
 
     Args:
@@ -72,12 +73,48 @@ def find_next_balance_change(
         )
 
         middle_block_height = (left_snapshot.block_height + right_snapshot.block_height) // 2
+        right_block_height = middle_block_height
 
-        middle_snapshot = staking_client.get_snapshot(
-            account_id=account_id,
-            pool_id=pool_id,
-            block_height=middle_block_height,
-        )
+        while left_snapshot.block_height < right_block_height:
+            try:
+                middle_snapshot = staking_client.get_snapshot(
+                    account_id=account_id,
+                    pool_id=pool_id,
+                    block_height=right_block_height,
+                )
+
+            except BlockHeightNotFoundError:
+                logger.warning(f"Block height not found: {right_block_height}")
+
+                right_block_height -= 1
+
+            else:
+                break
+
+        else:
+            left_block_height = middle_block_height
+            left_block_height += 1
+
+            while left_block_height < right_snapshot.block_height:
+                try:
+                    middle_snapshot = staking_client.get_snapshot(
+                        account_id=account_id,
+                        pool_id=pool_id,
+                        block_height=left_block_height,
+                    )
+
+                except BlockHeightNotFoundError:
+                    logger.warning(f"Block height not found: {left_block_height}")
+
+                    left_block_height += 1
+
+                else:
+                    break
+
+            else:
+                logger.debug(f"Found next balance change at block height {right_snapshot.block_height}")
+
+                return right_snapshot
 
         if are_balances_equal(left_snapshot, middle_snapshot):
             left_snapshot = middle_snapshot
@@ -87,3 +124,41 @@ def find_next_balance_change(
     logger.debug(f"Found next balance change at block height {right_snapshot.block_height}")
 
     return right_snapshot
+
+
+def find_balance_changes(
+    staking_client: StakingClient,
+    left_snapshot: BalanceSnapshot,
+    right_block_height: int,
+) -> list[BalanceSnapshot]:
+    """
+    Finds all balance changes between left snapshot and right block height.
+
+    Args:
+        staking_client: NEAR staking client.
+        left_snapshot: Left snapshot that sets the left block height.
+        right_block_height: Right block height.
+
+    Returns:
+        The snapshots in ascending block-height order.
+
+    Raises:
+        ValueError: If `find_next_balance_change` raises `ValueError`.
+    """
+    changes: list[BalanceSnapshot] = []
+
+    while True:
+        next_snapshot = find_next_balance_change(
+            staking_client=staking_client,
+            left_snapshot=left_snapshot,
+            right_block_height=right_block_height,
+        )
+
+        if next_snapshot is None:
+            break
+
+        changes.append(next_snapshot)
+        left_snapshot = next_snapshot
+
+    return changes
+

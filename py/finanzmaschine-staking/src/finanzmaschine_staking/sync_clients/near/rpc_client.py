@@ -1,7 +1,46 @@
 import base64
+import functools
 import json
+import logging
+import time
 
 import httpx
+
+from finanzmaschine_staking.sync_clients.decorators import retry
+from finanzmaschine_staking.sync_clients.near.rpc_client_exeptions import BlockHeightNotFoundError
+
+logger = logging.getLogger(__name__)
+
+
+def handle_block_height_not_found(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code != 422:
+                raise
+
+            data = exc.response.json()
+            error = data.get("error", {})
+            cause = error.get("cause", {})
+
+            if cause.get("name") != "UNKNOWN_BLOCK":
+                raise
+
+            block_height = (
+                cause
+                .get("info", {})
+                .get("block_reference", {})
+                .get("block_id")
+            )
+
+            raise BlockHeightNotFoundError(
+                f"Block height {block_height} not found"
+            ) from exc
+
+    return wrapper
 
 
 class RpcClient:
@@ -10,6 +49,12 @@ class RpcClient:
     def __init__(self, client: httpx.Client) -> None:
         self._client = client
 
+    @retry(
+        max_retries=5,
+        min_retry_delay_sec=8.0,
+        exceptions=httpx.HTTPStatusError,
+    )
+    @handle_block_height_not_found
     def call_view_function(
         self,
         contract_id: str,
@@ -38,20 +83,22 @@ class RpcClient:
             json.dumps(args).encode()
         ).decode()
 
+        payload = {
+            "jsonrpc": "2.0",
+            "id": "staking",
+            "method": "query",
+            "params": {
+                "request_type": "call_function",
+                "account_id": contract_id,
+                "method_name": method_name,
+                "args_base64": args_base64,
+                "block_id": block_height,
+                }
+        }
+
         response = self._client.post(
             self.BASE_URL,
-            json={
-                "jsonrpc": "2.0",
-                "id": "staking",
-                "method": "query",
-                "params": {
-                    "request_type": "call_function",
-                    "account_id": contract_id,
-                    "method_name": method_name,
-                    "args_base64": args_base64,
-                    "block_id": block_height,
-                },
-            },
+            json=payload,
         )
 
         response.raise_for_status()
