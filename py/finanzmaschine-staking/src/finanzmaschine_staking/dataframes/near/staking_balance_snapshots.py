@@ -58,3 +58,36 @@ def add_snapshot(
         ])
     )
 
+
+def get_snapshot(
+    df: pl.DataFrame,
+    account_id: str,
+    pool_id: str,
+    block_height: int,
+) -> StakingBalanceSnapshot | None:
+    df_snapshot = df.filter(
+        (pl.col(ACCOUNT_ID) == account_id)
+        & (pl.col(POOL_ID) == pool_id)
+        & (pl.col(BLOCK_HEIGHT) == block_height)
+    )
+
+    if df_snapshot.is_empty():
+        return None
+
+    if df_snapshot.height > 1:
+        raise RuntimeError(
+            "Multiple snapshots found for "
+            f"{ACCOUNT_ID}={account_id}, "
+            f"{POOL_ID}={pool_id}, "
+            f"{BLOCK_HEIGHT}={block_height}"
+        )
+
+    row = df_snapshot.row(0, named=True)
+
+    return StakingBalanceSnapshot(
+        account_id=row[ACCOUNT_ID],
+        pool_id=row[POOL_ID],
+        block_height=row[BLOCK_HEIGHT],
+        staked_balance_yocto_str=row[STAKED_BALANCE_YOCTO_STR],
+        unstaked_balance_yocto_str=row[UNSTAKED_BALANCE_YOCTO_STR],
+    )

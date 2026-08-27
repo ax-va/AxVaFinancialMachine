@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger
 from sqlmodel import Field, SQLModel
@@ -12,8 +12,13 @@ class BlockHeight(SQLModel, table=True):
         sa_type=BigInteger,
     )
 
-    timestamp: datetime
-
     timestamp_nanosec: int = Field(
         sa_type=BigInteger,
     )
+
+    @property
+    def timestamp(self) -> datetime:
+        return datetime.fromtimestamp(
+            self.timestamp_nanosec / 1e9,
+            tz=timezone.utc,
+        )
