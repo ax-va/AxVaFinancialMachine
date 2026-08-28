@@ -32,3 +32,26 @@ def retry(
         return wrapper
 
     return decorator
+
+
+def rate_limit(min_interval_sec: float | int):
+    def decorator(func):
+        last_call_time = 0.0
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            nonlocal last_call_time
+
+            elapsed = time.monotonic() - last_call_time
+            delay = min_interval_sec - elapsed
+
+            if delay > 0:
+                time.sleep(delay)
+
+            last_call_time = time.monotonic()
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

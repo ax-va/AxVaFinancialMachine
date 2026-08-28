@@ -2,11 +2,10 @@ import base64
 import functools
 import json
 import logging
-import time
 
 import httpx
 
-from finanzmaschine_staking.sync_clients.decorators import retry
+from finanzmaschine_staking.sync_clients.decorators import retry, rate_limit
 from finanzmaschine_staking.sync_clients.near.rpc_client_exeptions import BlockHeightNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -51,9 +50,10 @@ class RpcClient:
 
     @retry(
         max_retries=5,
-        min_retry_delay_sec=8.0,
+        min_retry_delay_sec=5.0,
         exceptions=httpx.HTTPStatusError,
     )
+    @rate_limit(min_interval_sec=2.0)
     @handle_block_height_not_found
     def call_view_function(
         self,

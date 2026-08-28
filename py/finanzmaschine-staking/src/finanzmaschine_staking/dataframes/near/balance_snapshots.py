@@ -1,6 +1,6 @@
 import polars as pl
 
-from finanzmaschine_staking.orm.near.staking_balance_snapshot import BalanceSnapshot
+from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
 
 ACCOUNT_ID = "account_id"
 POOL_ID = "pool_id"
@@ -91,3 +91,11 @@ def get_snapshot(
         staked_balance_yocto_str=row[STAKED_BALANCE_YOCTO_STR],
         unstaked_balance_yocto_str=row[UNSTAKED_BALANCE_YOCTO_STR],
     )
+
+
+def save_snapshots(
+    df: pl.DataFrame,
+    file_stem: str,
+) -> None:
+    df.write_csv(f"{file_stem}.csv")
+    df.write_parquet(f"{file_stem}.parquet")
