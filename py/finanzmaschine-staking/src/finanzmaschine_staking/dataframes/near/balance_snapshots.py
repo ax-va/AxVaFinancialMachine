@@ -6,7 +6,7 @@ ACCOUNT_ID = "account_id"
 POOL_ID = "pool_id"
 BLOCK_HEIGHT = "block_height"
 STAKED_BALANCE_YOCTO_STR = "staked_balance_yocto_str"
-UNSTAKED_BALANCE_YOCTO_STR = "staked_balance_yocto_str"
+UNSTAKED_BALANCE_YOCTO_STR = "unstaked_balance_yocto_str"
 
 SCHEMA = {
     ACCOUNT_ID: pl.String,
