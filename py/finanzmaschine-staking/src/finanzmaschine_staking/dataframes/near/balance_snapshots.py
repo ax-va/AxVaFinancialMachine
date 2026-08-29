@@ -16,15 +16,13 @@ SCHEMA = {
     UNSTAKED_BALANCE_YOCTO_STR: pl.String,
 }
 
-df_balance_snapshots = pl.DataFrame(schema=SCHEMA)
+df_near_staking_balance_snapshots = pl.DataFrame(schema=SCHEMA)
 
 
-def add_snapshot(
-    df: pl.DataFrame,
-    snapshot: BalanceSnapshot,
-) -> pl.DataFrame:
+def add_snapshot(snapshot: BalanceSnapshot) -> None:
+    global df_near_staking_balance_snapshots
 
-    df_duplicate = df.filter(
+    df_duplicate = df_near_staking_balance_snapshots.filter(
         (pl.col(ACCOUNT_ID) == snapshot.account_id)
         & (pl.col(POOL_ID) == snapshot.pool_id)
         & (pl.col(BLOCK_HEIGHT) == snapshot.block_height)
@@ -49,8 +47,8 @@ def add_snapshot(
         schema=SCHEMA,
     )
 
-    return (
-        pl.concat([df, df_row])
+    df_near_staking_balance_snapshots = (
+        pl.concat([df_near_staking_balance_snapshots, df_row])
         .sort([
             ACCOUNT_ID,
             POOL_ID,
@@ -60,12 +58,11 @@ def add_snapshot(
 
 
 def get_snapshot(
-    df: pl.DataFrame,
     account_id: str,
     pool_id: str,
     block_height: int,
 ) -> BalanceSnapshot | None:
-    df_snapshot = df.filter(
+    df_snapshot = df_near_staking_balance_snapshots.filter(
         (pl.col(ACCOUNT_ID) == account_id)
         & (pl.col(POOL_ID) == pool_id)
         & (pl.col(BLOCK_HEIGHT) == block_height)
@@ -93,9 +90,6 @@ def get_snapshot(
     )
 
 
-def save_snapshots(
-    df: pl.DataFrame,
-    file_stem: str,
-) -> None:
-    df.write_csv(f"{file_stem}.csv")
-    df.write_parquet(f"{file_stem}.parquet")
+def save_snapshots() -> None:
+    df_near_staking_balance_snapshots.write_csv(f"near_staking_balance_snapshots.csv")
+    df_near_staking_balance_snapshots.write_parquet(f"near_staking_balance_snapshots.parquet")
