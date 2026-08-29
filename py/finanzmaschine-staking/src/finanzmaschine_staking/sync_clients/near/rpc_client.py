@@ -43,7 +43,8 @@ def handle_block_height_not_found(func):
 
 
 class RpcClient:
-    BASE_URL = "https://archival-rpc.mainnet.fastnear.com"
+    REGULAR_URL = "https://rpc.mainnet.fastnear.com"
+    ARCHIVAL_URL = "https://archival-rpc.mainnet.fastnear.com"
 
     def __init__(self, client: httpx.Client) -> None:
         self._client = client
@@ -97,7 +98,7 @@ class RpcClient:
         }
 
         response = self._client.post(
-            self.BASE_URL,
+            self.ARCHIVAL_URL,
             json=payload,
         )
 
@@ -130,7 +131,7 @@ class RpcClient:
         }
 
         response = self._client.post(
-            self.BASE_URL,
+            self.REGULAR_URL,
             json=payload,
         )
 
