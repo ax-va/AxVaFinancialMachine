@@ -175,10 +175,20 @@ def find_balance_changes_in_chunks(
     current_left_snapshot = left_snapshot
     chunk_left_block_height = current_left_snapshot.block_height
 
+    logger.debug(
+        f"Starting global search for balance changes between block heights "
+        f"{chunk_left_block_height} and {right_block_height}"
+    )
+
     while chunk_left_block_height < right_block_height:
         chunk_right_block_height = min(
             chunk_left_block_height + chunk_size,
             right_block_height,
+        )
+
+        logger.debug(
+            f"Starting chunk search for balance changes between block heights "
+            f"{chunk_left_block_height} and {chunk_right_block_height}"
         )
 
         snapshots = find_balance_changes(
@@ -199,6 +209,7 @@ def find_balance_changes_in_chunks(
         block_height_offset = 0
         while True:
             if chunk_right_block_height + block_height_offset > right_block_height:
+                logger.debug("Global search completed")
                 return
 
             try:
@@ -211,3 +222,5 @@ def find_balance_changes_in_chunks(
 
             except BlockHeightNotFoundError:
                 block_height_offset += 1
+
+        logger.debug("Global search completed")
