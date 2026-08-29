@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import polars as pl
 
 from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
@@ -91,5 +93,7 @@ def get_snapshot(
 
 
 def save_snapshots() -> None:
-    df_near_staking_balance_snapshots.write_csv(f"near_staking_balance_snapshots.csv")
-    df_near_staking_balance_snapshots.write_parquet(f"near_staking_balance_snapshots.parquet")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+    file_stem = f"near_staking_balance_snapshots_{timestamp}"
+    df_near_staking_balance_snapshots.write_csv(f"{file_stem}.csv")
+    df_near_staking_balance_snapshots.write_parquet(f"{file_stem}.parquet")
