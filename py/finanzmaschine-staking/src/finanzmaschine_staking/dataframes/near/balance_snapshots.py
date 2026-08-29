@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 import polars as pl
 
@@ -92,8 +93,71 @@ def get_snapshot(
     )
 
 
-def save_snapshots() -> None:
+def save_snapshots(target_dir: str | Path | None = None) -> None:
+    target_dir = Path(target_dir) if target_dir is not None else Path.cwd()
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-    file_stem = f"near_staking_balance_snapshots_{timestamp}"
-    df_near_staking_balance_snapshots.write_csv(f"{file_stem}.csv")
-    df_near_staking_balance_snapshots.write_parquet(f"{file_stem}.parquet")
+
+    file_stem = (
+        target_dir / f"near_staking_balance_snapshots_{timestamp}"
+    )
+
+    df_near_staking_balance_snapshots.write_csv(
+        file_stem.with_suffix(".csv")
+    )
+    df_near_staking_balance_snapshots.write_parquet(
+        file_stem.with_suffix(".parquet")
+    )
+
+
+def load_snapshots_from_parquet(parquet_path: str | Path) -> None:
+    global df_near_staking_balance_snapshots
+
+    df = pl.read_parquet(parquet_path)
+
+    if df.schema != SCHEMA:
+        raise ValueError(
+            f"Expected schema {SCHEMA}, got {df.schema}"
+        )
+
+    df_near_staking_balance_snapshots = df
+
+
+def clear_snapshots() -> None:
+    global df_near_staking_balance_snapshots
+
+    df_near_staking_balance_snapshots = pl.DataFrame(schema=SCHEMA)
+
+
+def get_snapshot_deltas() -> pl.DataFrame:
+    return (
+        df_near_staking_balance_snapshots
+        .sort([
+            ACCOUNT_ID,
+            POOL_ID,
+            BLOCK_HEIGHT,
+        ])
+        .select(
+            pl.col(BLOCK_HEIGHT),
+            pl.col(POOL_ID),
+            pl.col(ACCOUNT_ID),
+
+            pl.col(BLOCK_HEIGHT)
+            .diff()
+            .over([ACCOUNT_ID, POOL_ID])
+            .alias("delta_blocks"),
+
+            pl.col(STAKED_BALANCE_YOCTO_STR)
+            .cast(pl.Decimal(precision=38, scale=0))
+            .diff()
+            .over([ACCOUNT_ID, POOL_ID])
+            .alias("staked_delta_yocto"),
+
+            pl.col(UNSTAKED_BALANCE_YOCTO_STR)
+            .cast(pl.Decimal(precision=38, scale=0))
+            .diff()
+            .over([ACCOUNT_ID, POOL_ID])
+            .alias("unstaked_delta_yocto"),
+        )
+    )

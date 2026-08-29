@@ -1,5 +1,7 @@
 import logging
+from pathlib import Path
 
+from finanzmaschine_staking.dataframes.near.balance_snapshots import clear_snapshots, add_snapshot, save_snapshots
 from finanzmaschine_staking.orm.near.balance_snapshot import BalanceSnapshot
 from finanzmaschine_staking.sync_clients.near.rpc_client_exeptions import BlockHeightNotFoundError
 from finanzmaschine_staking.sync_clients.near.staking_client import StakingClient
@@ -162,3 +164,51 @@ def find_balance_changes(
 
     return changes
 
+
+def find_balance_changes_in_chunks(
+    staking_client: StakingClient,
+    left_snapshot: BalanceSnapshot,
+    right_block_height: int,
+    chunk_size: int,
+    target_dir: str | Path,
+) -> None:
+    current_left_snapshot = left_snapshot
+    chunk_left_block_height = current_left_snapshot.block_height
+
+    while chunk_left_block_height < right_block_height:
+        chunk_right_block_height = min(
+            chunk_left_block_height + chunk_size,
+            right_block_height,
+        )
+
+        snapshots = find_balance_changes(
+            staking_client=staking_client,
+            left_snapshot=current_left_snapshot,
+            right_block_height=chunk_right_block_height,
+        )
+
+        clear_snapshots()
+
+        for snapshot in snapshots:
+            add_snapshot(snapshot)
+
+        save_snapshots(target_dir)
+
+        chunk_left_block_height = chunk_right_block_height
+
+        block_height_offset = 0
+        while True:
+
+            if chunk_right_block_height + block_height_offset > right_block_height:
+                return
+
+            try:
+                current_left_snapshot = staking_client.get_snapshot(
+                    account_id=current_left_snapshot.account_id,
+                    pool_id=current_left_snapshot.pool_id,
+                    block_height=chunk_right_block_height + block_height_offset,
+                )
+                break
+
+            except BlockHeightNotFoundError:
+                block_height_offset += 1

@@ -112,3 +112,34 @@ class RpcClient:
         result = data["result"]["result"]
 
         return bytes(result)
+
+    @retry(
+        max_retries=5,
+        min_retry_delay_sec=5.0,
+        exceptions=httpx.HTTPStatusError,
+    )
+    @rate_limit(min_interval_sec=2.0)
+    def get_final_block_height(self) -> int:
+        payload = {
+            "jsonrpc": "2.0",
+            "id": "staking",
+            "method": "block",
+            "params": {
+                "finality": "final",
+                }
+        }
+
+        response = self._client.post(
+            self.BASE_URL,
+            json=payload,
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        if "error" in data:
+            raise RuntimeError(
+                f"NEAR RPC error: {data['error']}"
+            )
+
+        return data["result"]["header"]["height"]
