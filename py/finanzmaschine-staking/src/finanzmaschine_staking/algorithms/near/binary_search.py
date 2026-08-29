@@ -198,7 +198,6 @@ def find_balance_changes_in_chunks(
 
         block_height_offset = 0
         while True:
-
             if chunk_right_block_height + block_height_offset > right_block_height:
                 return
 
