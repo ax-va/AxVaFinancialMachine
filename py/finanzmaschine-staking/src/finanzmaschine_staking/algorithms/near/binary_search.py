@@ -167,17 +167,19 @@ def find_balance_changes(
 
 def find_balance_changes_in_chunks(
     staking_client: StakingClient,
-    left_snapshot: BalanceSnapshot,
+    account_id: str,
+    pool_id: str,
+    left_block_height: int,
     right_block_height: int,
     chunk_size: int,
     target_dir: str | Path,
+    last_known_snapshot: BalanceSnapshot | None = None
 ) -> None:
-    current_left_snapshot = left_snapshot
-    chunk_left_block_height = current_left_snapshot.block_height
+    chunk_left_block_height = left_block_height
 
     logger.debug(
         f"Starting global search for balance changes between block heights "
-        f"{chunk_left_block_height} and {right_block_height}"
+        f"{left_block_height} and {right_block_height}"
     )
 
     while chunk_left_block_height < right_block_height:
@@ -191,36 +193,50 @@ def find_balance_changes_in_chunks(
             f"{chunk_left_block_height} and {chunk_right_block_height}"
         )
 
-        snapshots = find_balance_changes(
-            staking_client=staking_client,
-            left_snapshot=current_left_snapshot,
-            right_block_height=chunk_right_block_height,
-        )
-
-        clear_snapshots()
-
-        for snapshot in snapshots:
-            add_snapshot(snapshot)
-
-        save_snapshots(target_dir)
-
-        chunk_left_block_height = chunk_right_block_height
-
         block_height_offset = 0
+        current_left_snapshot = None
         while True:
-            if chunk_right_block_height + block_height_offset > right_block_height:
-                logger.debug("Global search completed")
-                return
-
             try:
                 current_left_snapshot = staking_client.get_snapshot(
-                    account_id=current_left_snapshot.account_id,
-                    pool_id=current_left_snapshot.pool_id,
-                    block_height=chunk_right_block_height + block_height_offset,
+                    account_id=account_id,
+                    pool_id=pool_id,
+                    block_height=chunk_left_block_height + block_height_offset,
                 )
                 break
 
             except BlockHeightNotFoundError:
                 block_height_offset += 1
 
-        logger.debug("Global search completed")
+                if chunk_left_block_height + block_height_offset == chunk_right_block_height:
+                    break
+
+        if current_left_snapshot is not None:
+            snapshots = find_balance_changes(
+                staking_client=staking_client,
+                left_snapshot=current_left_snapshot,
+                right_block_height=chunk_right_block_height,
+            )
+
+            clear_snapshots()
+
+            if (
+                last_known_snapshot is not None
+                and not are_balances_equal(
+                    current_left_snapshot, last_known_snapshot
+                )
+            ):
+                add_snapshot(current_left_snapshot)
+
+            for snapshot in snapshots:
+                add_snapshot(snapshot)
+
+            if snapshots:
+                last_known_snapshot = snapshots[-1]
+            else:
+                last_known_snapshot = current_left_snapshot
+
+            save_snapshots(target_dir)
+
+        chunk_left_block_height = chunk_right_block_height
+
+    logger.debug("Global search completed")
