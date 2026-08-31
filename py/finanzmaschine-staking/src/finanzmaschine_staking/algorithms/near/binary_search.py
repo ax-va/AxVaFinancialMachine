@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from finanzmaschine_staking.dataframes.near.balance_snapshots import clear_snapshots, add_snapshot, save_snapshots
@@ -170,9 +171,9 @@ def find_balance_changes_in_chunks(
     account_id: str,
     pool_id: str,
     left_block_height: int,
-    right_block_height: int,
-    chunk_size: int,
-    target_dir: str | Path,
+    right_block_height: int | None = None,
+    chunk_size: int = 1_000_000,
+    target_dir: str | Path | None = None,
     last_known_snapshot: BalanceSnapshot | None = None
 ) -> None:
     """
@@ -191,19 +192,36 @@ def find_balance_changes_in_chunks(
     from a previously completed chunk without losing a balance change at the chunk boundary.
 
     Args:
-        staking_client: Client used to retrieve staking balance snapshots.
-        account_id: Account whose staking balance is being searched.
-        pool_id: Staking pool associated with the account.
-        left_block_height: Left boundary of the block range.
-        right_block_height: Right boundary of the block range.
-        chunk_size: Maximum block-height range covered by each chunk.
-        target_dir: Directory where snapshots from completed chunks are saved.
+        staking_client:
+            Client used to retrieve staking balance snapshots.
+        account_id:
+            Account whose staking balance is being searched.
+        pool_id:
+            Staking pool associated with the account.
+        left_block_height:
+            Left boundary of the block range.
+        right_block_height:
+            Right boundary of the block range.
+            If omitted, the current final block height is fetched once before the search starts.
+        chunk_size:
+            Maximum block-height range covered by each chunk.
+            Defaults to 1,000,000 blocks.
+        target_dir:
+            Directory where snapshots from completed chunks are saved.
+            If omitted, a timestamped subdirectory is created in the current working directory.
         last_known_snapshot:
             Last known balance snapshot preceding the search range.
             If omitted, the first available snapshot is treated as the initial baseline
             and is not considered a balance change.
     """
     chunk_left_block_height = left_block_height
+
+    if right_block_height is None:
+        right_block_height = staking_client.rpc_client.get_final_block_height()
+
+    if target_dir is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        target_dir = Path(f"./snapshots_{timestamp}")
 
     logger.debug(
         f"Starting global search for balance changes between block heights "

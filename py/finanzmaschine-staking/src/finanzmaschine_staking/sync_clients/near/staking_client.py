@@ -9,6 +9,10 @@ class StakingClient:
     def __init__(self, rpc_client: RpcClient) -> None:
         self._rpc_client = rpc_client
 
+    @property
+    def rpc_client(self) -> RpcClient:
+        return self._rpc_client
+
     @lru_cache(maxsize=4096)
     def get_snapshot(
         self,
