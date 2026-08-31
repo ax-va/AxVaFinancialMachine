@@ -38,8 +38,8 @@ def find_next_balance_change(
         The snapshot of the next balance change or `None`.
 
     Raises:
-        ValueError: If `right_block_height` is less than
-        or equal to `left_snapshot.block_height`.
+        ValueError:
+            If `right_block_height` is less than or equal to `left_snapshot.block_height`.
     """
     logger.debug(
         f"Starting search for next balance change between block heights "
@@ -145,7 +145,7 @@ def find_balance_changes(
         The snapshots in ascending block-height order.
 
     Raises:
-        ValueError: If `find_next_balance_change` raises `ValueError`.
+        ValueError: from `find_next_balance_change`.
     """
     changes: list[BalanceSnapshot] = []
 
@@ -175,6 +175,34 @@ def find_balance_changes_in_chunks(
     target_dir: str | Path,
     last_known_snapshot: BalanceSnapshot | None = None
 ) -> None:
+    """
+    Finds staking balance changes within a block range in fixed-size chunks.
+
+    Splits the range from `left_block_height` to `right_block_height` into chunks
+    and searches each chunk for balance changes.
+    The snapshots found in each completed chunk are saved to `target_dir`.
+
+    If a chunk starts at a block height that does not exist,
+    the first existing block within the chunk is used as its left snapshot.
+    When `last_known_snapshot` is provided, this snapshot is compared with
+    the first snapshot of the chunk and is included in the results if its balance has changed.
+
+    `last_known_snapshot` also allows an interrupted search to be resumed
+    from a previously completed chunk without losing a balance change at the chunk boundary.
+
+    Args:
+        staking_client: Client used to retrieve staking balance snapshots.
+        account_id: Account whose staking balance is being searched.
+        pool_id: Staking pool associated with the account.
+        left_block_height: Left boundary of the block range.
+        right_block_height: Right boundary of the block range.
+        chunk_size: Maximum block-height range covered by each chunk.
+        target_dir: Directory where snapshots from completed chunks are saved.
+        last_known_snapshot:
+            Last known balance snapshot preceding the search range.
+            If omitted, the first available snapshot is treated as the initial baseline
+            and is not considered a balance change.
+    """
     chunk_left_block_height = left_block_height
 
     logger.debug(
@@ -193,22 +221,29 @@ def find_balance_changes_in_chunks(
             f"{chunk_left_block_height} and {chunk_right_block_height}"
         )
 
-        block_height_offset = 0
         current_left_snapshot = None
-        while True:
-            try:
-                current_left_snapshot = staking_client.get_snapshot(
-                    account_id=account_id,
-                    pool_id=pool_id,
-                    block_height=chunk_left_block_height + block_height_offset,
-                )
-                break
+        if (
+            last_known_snapshot is not None
+            and chunk_left_block_height == last_known_snapshot.block_height
+        ):
+            current_left_snapshot = last_known_snapshot
 
-            except BlockHeightNotFoundError:
-                block_height_offset += 1
-
-                if chunk_left_block_height + block_height_offset == chunk_right_block_height:
+        else:
+            block_height_offset = 0
+            while True:
+                try:
+                    current_left_snapshot = staking_client.get_snapshot(
+                        account_id=account_id,
+                        pool_id=pool_id,
+                        block_height=chunk_left_block_height + block_height_offset,
+                    )
                     break
+
+                except BlockHeightNotFoundError:
+                    block_height_offset += 1
+
+                    if chunk_left_block_height + block_height_offset == chunk_right_block_height:
+                        break
 
         if current_left_snapshot is not None:
             snapshots = find_balance_changes(

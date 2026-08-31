@@ -52,7 +52,10 @@ class RpcClient:
     @retry(
         max_retries=10,
         min_retry_delay_sec=3.0,
-        exceptions=httpx.HTTPStatusError,
+        exceptions=(
+            httpx.HTTPStatusError,
+            httpx.ReadTimeout,
+        ),
     )
     @rate_limit(min_interval_sec=3.0)
     @handle_block_height_not_found
@@ -117,7 +120,10 @@ class RpcClient:
     @retry(
         max_retries=5,
         min_retry_delay_sec=3.0,
-        exceptions=httpx.HTTPStatusError,
+        exceptions=(
+            httpx.HTTPStatusError,
+            httpx.ReadTimeout,
+        ),
     )
     @rate_limit(min_interval_sec=3.0)
     def get_final_block_height(self) -> int:
